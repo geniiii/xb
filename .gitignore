@@ -1,0 +1,11 @@
+.vs/*
+.idea/*
+build/*
+*.exe
+*.pdb
+*.exp
+*.lib
+*.obj
+*.dll
+*.xsv
+*.res

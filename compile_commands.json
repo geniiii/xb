@@ -1,0 +1,12 @@
+[
+  {
+    "directory": "C:/code/xtal-gb/build",
+    "command": "C:\\PROGRA~1\\MICROS~2\\2022\\COMMUN~1\\VC\\Tools\\MSVC\\1434~1.319\\bin\\Hostx64\\x64\\cl.exe  /nologo -D, -DXTAL_BUILD_WIN32=1 -DXTAL_DEBUG=1 -DXTAL_HOT_RELOAD=1 -IC:\\code\\xtal-gb\\source -IC:\\code\\xtal-gb\\source\\xtal /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c17 /FoCMakeFiles\\xtal-gb.dir\\source\\game\\build.c.obj /FdTARGET_COMPILE_PDB /FS -c C:\\code\\xtal-gb\\source\\game\\build.c",
+    "file": "C:\\code\\xtal-gb\\source\\game\\build.c"
+  },
+  {
+    "directory": "C:/code/xtal-gb/build",
+    "command": "C:\\PROGRA~1\\MICROS~2\\2022\\COMMUN~1\\VC\\Tools\\MSVC\\1434~1.319\\bin\\Hostx64\\x64\\cl.exe  /nologo -D, -DXTAL_BUILD_WIN32=1 -DXTAL_DEBUG=1 -DXTAL_HOT_RELOAD=1 -IC:\\code\\xtal-gb\\source -IC:\\code\\xtal-gb\\source\\xtal /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c17 /FoCMakeFiles\\xtal-gb-win32.dir\\source\\xtal\\win32\\build.c.obj /FdTARGET_COMPILE_PDB /FS -c C:\\code\\xtal-gb\\source\\xtal\\win32\\build.c",
+    "file": "C:\\code\\xtal-gb\\source\\xtal\\win32\\build.c"
+  }
+]

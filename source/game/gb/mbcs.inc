@@ -1,0 +1,35 @@
+// clang-format off
+MBCFlags(ROMOnly, MBCFlag_HasRAM)
+MBC(MBC1)
+MBCFlags(MBC1RAM, MBCFlag_HasRAM)
+MBCFlags(MBC1RAMBattery, MBCFlag_HasRAM | MBCFlag_HasBattery)
+MBCIndexFlags(MBC2, 5, MBCFlag_HasRAM)
+MBCFlags(MBC2Battery, MBCFlag_HasRAM | MBCFlag_HasBattery)
+// NOTE(geni): Unused
+MBCFlags(ROMRAM, MBCFlag_HasRAM)
+// NOTE(geni): Unused
+MBCFlags(ROMRAMBattery, MBCFlag_HasRAM | MBCFlag_HasBattery)
+MBCIndex(MMM01, 0xB)
+MBC(MMM01RAM)
+MBC(MMM01RAMBattery)
+MBCIndexFlags(MBC3TimerBattery, 0xF, MBCFlag_HasTimer | MBCFlag_HasBattery)
+// NOTE(geni): Unused
+MBCFlags(MBC3TimerRAMBattery, MBCFlag_HasRAM | MBCFlag_HasTimer | MBCFlag_HasBattery)
+MBC(MBC3)
+MBCFlags(MBC3RAM, MBCFlag_HasRAM)
+MBCFlags(MBC3RAMBattery, MBCFlag_HasRAM | MBCFlag_HasBattery)
+MBCIndex(MBC5, 0x19)
+MBCFlags(MBC5RAM, MBCFlag_HasRAM)
+MBCFlags(MBC5RAMBattery, MBCFlag_HasRAM | MBCFlag_HasBattery)
+MBCFlags(MBC5Rumble, MBCFlag_HasRumble)
+MBCFlags(MBC5RumbleRAM, MBCFlag_HasRAM)
+MBCFlags(MBC5RumbleRAMBattery, MBCFlag_HasRAM | MBCFlag_HasBattery)
+MBCIndex(MBC6, 0x20)
+MBCIndex(MBC7SensorRumbleRAMBattery, 0x22)
+MBCIndex(PocketCamera, 0xFC)
+MBC(BandaiTama5)
+MBC(HuC3)
+MBCFlags(HuC1RAMBattery, MBCFlag_HasRAM | MBCFlag_HasBattery)
+
+MBCUnlicensed(NTOLD2, 0)
+    // clang-format on
