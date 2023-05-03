@@ -83,7 +83,7 @@ internal b32 GB_GetUnlicensedROMTypeFromHash(u64 hash, GB_UnlicensedHeaderOverri
                 .ram   = 3,
             };
         } break;
-        case 0xB941FE7ED5E51F5: {  // NOTE(geni): 23 in 1
+        case 0xB941FE7ED5E51F5: {  // NOTE(geni): "23 in 1"
             *unlicensed = (GB_UnlicensedHeaderOverride){
                 .type  = MBCType_Unlicensed_NTOLD2,
                 .flags = MBCFlag_HasRAM,

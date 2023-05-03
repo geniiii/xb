@@ -83,8 +83,8 @@
 #include "xtal/util/pool.c"
 #include "xtal/util/dynamic_array.c"
 #include "xtal/util/hashmap.c"
-// #include "xtal/util/ini_scanner.c"
-// #include "xtal/util/ini.c"
+#include "xtal/util/ini_scanner.c"
+#include "xtal/util/ini.c"
 
 #include "xtal/gfx/gl4/shader.c"
 #include "xtal/gfx/gl4/texture.c"

@@ -88,18 +88,27 @@ internal void _Xtal_INIScanner_ErrorAtCurrent(Xtal_INIScanner* scanner, String8 
     _Xtal_INIScanner_ErrorAt(scanner, message, scanner->line, scanner->col);
 }
 
-internal u8 _Xtal_INIScanner_Peek(Xtal_INIScanner* scanner) {
-}
-
-internal b32 _Xtal_INIScanner_Match(Xtal_INIScanner* scanner, u8 expected) {
-}
-
 internal void _Xtal_INIScanner_Advance(Xtal_INIScanner* scanner) {
     ++scanner->current;
     ++scanner->col;
 }
 
-internal void _Xtal_INIScannerHandleNumLiteral(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* token) {
+internal char _Xtal_INIScanner_Peek(Xtal_INIScanner* scanner) {
+    return scanner->source.cstr[scanner->current];
+}
+internal b32 _Xtal_INIScanner_Match(Xtal_INIScanner* scanner, u8 expected) {
+    if (scanner->current >= scanner->source.size) {
+        return false;
+    }
+    u8 read_rune = _Xtal_INIScanner_Peek(scanner);
+    if (read_rune != expected) {
+        return false;
+    }
+    _Xtal_INIScanner_Advance(scanner);
+    return true;
+}
+
+internal b32 _Xtal_INIScannerHandleNumLiteral(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* token) {
     u32 start = scanner->current;
     // TODO(geni): Basically bad Odin string slices lmao, idk if this even works
     i64 num = S8_GetFirstI64((String8){scanner->source.data + start, scanner->source.size - start});
@@ -110,9 +119,10 @@ internal void _Xtal_INIScannerHandleNumLiteral(Xtal_INIScanner* scanner, Xtal_IN
                      .tag = Xtal_INIScanner_TokenLiteral_Number,
                      },
     };
+    return 1;
 }
 
-internal void _Xtal_INIScannerHandleIdentifier(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* token) {
+internal b32 _Xtal_INIScannerHandleIdentifier(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* token) {
     u32 start = scanner->current;
 
     while (CharIsAlpha(_Xtal_INIScanner_Peek(scanner))) {
@@ -123,6 +133,7 @@ internal void _Xtal_INIScannerHandleIdentifier(Xtal_INIScanner* scanner, Xtal_IN
                 .type   = Xtal_INIScanner_TokenType_Identifier,
                 .lexeme = lexeme,
     };
+    return 1;
 }
 
 internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* out) {
@@ -143,7 +154,7 @@ internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner
             }
         } break;
         case '=': {
-            token.type =.EQUAL
+            token.type = Xtal_INIScanner_TokenType_Equal;
         } break;
         case '"': {
             u32 start_line   = scanner->line;
@@ -157,42 +168,52 @@ internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner
                 }
                 _Xtal_INIScanner_Advance(scanner);
             }
-            token.type    =.STRING;
+            token.type = Xtal_INIScanner_TokenType_String;
+            // TODO(geni): Slices..
             token.literal = scanner.source [start_of_lit:scanner.current];
             token.line    = start_line;
             token.col     = start_col;
-            advance(scanner);
+            _Xtal_INIScanner_Advance(scanner);
         } break;
         case '\n': {
             scanner->line += 1;
             scanner->col = 0;
-            token.type   =.EOL;
+            token.type   = Xtal_INIScanner_TokenType_EOL;
         } break;
-        case ' ', '\r', '\t':
-        break case '[':
-        token.type =.LEFT_BRACKET case ']':
-        token.type =.RIGHT_BRACKET case:
-            if unicode
-                .is_digit(char) {
-                start_line:
-                    = scanner.line
-                                                                                                                                       start_col :                                                                                     = scanner.col if !handle_num_literal (scanner, &token){
-                                          error_at(scanner, "Invalid numeric literal", start_line, start_col)} token.line = start_line token.col = start_col
+        case ' ':
+        case '\r':
+        case '\t': break;
+        case '[': {
+            token.type = Xtal_INIScanner_TokenType_LeftBracket;
+        } break;
+        case ']': {
+            token.type = Xtal_INIScanner_TokenType_RightBracket;
+        } break;
+        default:
+            if (CharIsDigit(c)) {
+                u32 start_line = scanner->line;
+                u32 start_col  = scanner->col;
+                if (!_Xtal_INIScannerHandleNumLiteral(scanner, &token)) {
+                    _Xtal_INIScanner_ErrorAt(scanner, S8Lit("Invalid numeric literal"), start_line, start_col);
                 }
-            else if unicode
-                .is_alpha(char) {
-                start_line:
-                    = scanner.line
-                                                                                                                                  start_col :                                                                                = scanner.col if !handle_identifier (scanner, &token){
-                                          error_at(scanner, "Invalid identifier", start_line, start_col)} token.line = start_line token.col = start_col
+                token.line = start_line;
+                token.col  = start_col;
+            } else if (CharIsAlpha(c)) {
+                u32 start_line = scanner->line;
+                u32 start_col  = scanner->col;
+                if (!_Xtal_INIScannerHandleIdentifier(scanner, &token)) {
+                    _Xtal_INIScanner_ErrorAt(scanner, S8Lit("Invalid identifier"), start_line, start_col);
                 }
-            else {
-                error(scanner, "Received unexpected character")
-                    ok = false
+                token.line = start_line;
+                token.col  = start_col;
+            } else {
+                _Xtal_INIScanner_ErrorAtCurrent(scanner, S8Lit("Received unexpected character"));
+                ok = false;
             }
     }
 
-    return
+end:
+    return ok;
 }
 
 scan_tokens ::proc(scanner
