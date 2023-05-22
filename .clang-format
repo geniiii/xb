@@ -56,4 +56,5 @@ StatementMacros:
   - "Callbacks"
   - "GLProc"
   - "Input"
+  - "TokenType"
   - "Xtal_HashMapDefine"

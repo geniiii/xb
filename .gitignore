@@ -9,3 +9,4 @@ build/*
 *.dll
 *.xsv
 *.res
+compile_commands.json

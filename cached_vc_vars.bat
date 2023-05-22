@@ -58,7 +58,7 @@ call %VCDIR%\VC\Auxiliary\Build\vcvars64.bat
 set | sort > %POST_ENV%
 REM sort %POST_ENV%
 
-comm -13 %PRE_ENV% %POST_ENV% > %CACHED_ENV%
+"C:\Program Files\Git\usr\bin\comm.exe" -13 %PRE_ENV% %POST_ENV% > %CACHED_ENV%
 
 goto :END
 

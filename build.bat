@@ -4,30 +4,29 @@ call cached_vc_vars.bat
 
 setlocal EnableDelayedExpansion
 
-set compiler=cl.exe
+set compiler=clang-cl.exe
 set engine_name=xtal
 set application_name=xb
 
-set build=release
+set build=debug
 set debug=n
 set hot_reload=n
-
 set optimizations=n
 if "%build%" equ "release"           set optimizations=y
 if "%build%" equ "release_hr"        set optimizations=y
 if "%build%" equ "release_debug"     set optimizations=y
 if "%build%" equ "release_debuginfo" set optimizations=y
 
-if "%build%" equ "debug"         set debug=y
-if "%build%" equ "release_debug" set debug=y
+if "%build%" equ "debug"             set debug=y
+if "%build%" equ "release_debug"     set debug=y
 
 if "%build%" equ "debug"             set debug_info=y
 if "%build%" equ "release_debug"     set debug_info=y
 if "%build%" equ "release_debuginfo" set debug_info=y
 
-if "%build%" equ "debug"         set hot_reload=y
-if "%build%" equ "release_debug" set hot_reload=y
-if "%build%" equ "release_hr"    set hot_reload=y
+if "%build%" equ "debug"             set hot_reload=y
+if "%build%" equ "release_debug"     set hot_reload=y
+if "%build%" equ "release_hr"        set hot_reload=y
 
 set build_options=/DXTAL_BUILD_WIN32=1 /D_CRT_SECURE_NO_WARNINGS
 if "%hot_reload%" equ "y" (
