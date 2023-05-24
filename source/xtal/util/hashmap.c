@@ -27,7 +27,7 @@
         result.buckets = Xtal_MArenaPushTypeZeroN(&result.arena, type_name##_Bucket, result.capacity);            \
         return result;                                                                                            \
     }                                                                                                             \
-    internal b32 type_name##_Get(type_name* hm, key_type key, u64 hash, value_type* out) {                        \
+    internal b32 type_name##_Get(type_name* hm, key_type key, u64 hash, value_type** out) {                       \
         u64 bucket_index = hash & hm->capacity - 1;                                                               \
         if (!_Xtal_HashMapOccupied(hm->buckets[bucket_index].hash)) {                                             \
             return 0;                                                                                             \
@@ -43,7 +43,9 @@
             ++psl;                                                                                                \
         }                                                                                                         \
         if (compare_func(&hm->buckets[bucket_index].key, key, hash)) {                                            \
-            *out = hm->buckets[bucket_index].value;                                                               \
+            if (out) {                                                                                            \
+                *out = &hm->buckets[bucket_index].value;                                                          \
+            }                                                                                                     \
             return 1;                                                                                             \
         }                                                                                                         \
         return 0;                                                                                                 \
