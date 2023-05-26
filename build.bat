@@ -4,7 +4,7 @@ call cached_vc_vars.bat
 
 setlocal EnableDelayedExpansion
 
-set compiler=clang-cl.exe
+set compiler=cl.exe
 set engine_name=xtal
 set application_name=xb
 
