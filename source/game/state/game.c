@@ -10,10 +10,13 @@ internal void Game_HotLoad(Xtal_OSState* _os, b32 reloaded) {
 
     ResetInputs();
 
-    Xtal_OS_File file = xtal_os->OpenFile(S8Lit("aaaa"), Xtal_OS_FilePermission_Read, Xtal_OS_FileOpen_OpenExisting);
+    Xtal_OS_File file = xtal_os->OpenFile(S8Lit("settings.ini"), Xtal_OS_FilePermission_Read, Xtal_OS_FileOpen_OpenExisting);
     String8      contents;
     xtal_os->LoadEntireFile(file, &xtal_os->frame_arena, &contents.data, &contents.size);
-    Xtal_INIParse(contents);
+
+    Xtal_INI settings = Xtal_INIParse(S8Lit("settings.ini"), contents);
+    game->settings    = GameSettingsNew(&settings);
+    Log("%u", game->settings.tickrate);
 
     if (!reloaded) {
         game->hide_ui = 0;

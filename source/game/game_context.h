@@ -11,7 +11,8 @@ typedef struct {
     UI      ui;
     b32     hide_ui;
 
-    b32 paused;
+    b32          paused;
+    GameSettings settings;
 
     Gameboy gb;
 } GameContext;

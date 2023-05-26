@@ -116,6 +116,7 @@
 #include "gb/opcodes.h"
 #include "gb/interrupts.h"
 #include "ui.h"
+#include "settings.c"
 #include "game_context.h"
 
 #include "messages.c"
