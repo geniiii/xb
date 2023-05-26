@@ -18,19 +18,7 @@ internal String8 Xtal_INIScanner_TokenTypeName(Xtal_INIScanner_TokenType index) 
 }
 
 typedef struct {
-    union {
-        String8 str;
-        f64     real;
-        i64     num;
-        b32     boolean;
-    };
-    enum {
-        Xtal_INIScanner_TokenLiteral_None,
-        Xtal_INIScanner_TokenLiteral_String8,
-        Xtal_INIScanner_TokenLiteral_Real,
-        Xtal_INIScanner_TokenLiteral_Number,
-        Xtal_INIScanner_TokenLiteral_Boolean,
-    } tag;
+    String8 str;
 } Xtal_INIScanner_TokenLiteral;
 
 typedef struct {
@@ -105,46 +93,11 @@ internal b32 _Xtal_INIScanner_Match(Xtal_INIScanner* scanner, u8 expected) {
     return true;
 }
 
-internal b32 _Xtal_INIScannerHandleNumLiteral(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* token) {
-    u32 start    = scanner->current - 1;
-    b32 is_float = 0;
-    while (CharIsNumeric(_Xtal_INIScanner_Peek(scanner))) {
-        _Xtal_INIScanner_Advance(scanner);
-        if (_Xtal_INIScanner_Peek(scanner) == '.') {
-            is_float = 1;
-            _Xtal_INIScanner_Advance(scanner);
-        }
-    }
-    // TODO(geni): Basically bad Odin string slices lmao
-    String8 num_str = {scanner->source.str + start, scanner->source.size - scanner->current};
-    if (is_float) {
-        // NOTE(geni): Might want to add TokenType_Real?
-        f64 num = strtod(num_str.cstr, NULL);
-        *token  = (Xtal_INIScanner_Token){
-             .type    = Xtal_INIScanner_TokenType_Number,
-             .literal = {
-                         .real = num,
-                         .tag  = Xtal_INIScanner_TokenLiteral_Real,
-                         },
-        };
-    } else {
-        i64 num = S8_GetFirstI64(num_str);
-        *token  = (Xtal_INIScanner_Token){
-             .type    = Xtal_INIScanner_TokenType_Number,
-             .literal = {
-                         .num = num,
-                         .tag = Xtal_INIScanner_TokenLiteral_Number,
-                         }
-        };
-    }
-    return 1;
-}
-
 // TODO(geni): Bad name, this also handles strings
 internal b32 _Xtal_INIScannerHandleIdentifier(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* token) {
     u32 start = scanner->current - 1;
 
-    while (scanner->unterminated_assignment ? (_Xtal_INIScanner_Peek(scanner) != '\r' && _Xtal_INIScanner_Peek(scanner) != '\n') : CharIsAlpha(_Xtal_INIScanner_Peek(scanner))) {
+    while (scanner->current < scanner->source.size && scanner->unterminated_assignment ? (_Xtal_INIScanner_Peek(scanner) != '\r' && _Xtal_INIScanner_Peek(scanner) != '\n') : (CharIsAlpha(_Xtal_INIScanner_Peek(scanner)) || CharIsDigit(_Xtal_INIScanner_Peek(scanner)))) {
         _Xtal_INIScanner_Advance(scanner);
     }
 
@@ -152,10 +105,20 @@ internal b32 _Xtal_INIScannerHandleIdentifier(Xtal_INIScanner* scanner, Xtal_INI
     if (lexeme.size == 0) {
         lexeme = S8Lit("");
     }
-    *token = (Xtal_INIScanner_Token){
-        .type   = scanner->unterminated_assignment ? Xtal_INIScanner_TokenType_String : Xtal_INIScanner_TokenType_Identifier,
-        .lexeme = lexeme,
-    };
+    if (scanner->unterminated_assignment) {
+        *token = (Xtal_INIScanner_Token){
+            .type    = Xtal_INIScanner_TokenType_String,
+            .literal = {
+                        .str = lexeme,
+                        },
+        };
+    } else {
+        *token = (Xtal_INIScanner_Token){
+            .type   = Xtal_INIScanner_TokenType_Identifier,
+            .lexeme = lexeme,
+        };
+    }
+
     return 1;
 }
 
@@ -172,7 +135,7 @@ internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner
     switch (c) {
         case ';':
         case '#': {
-            while (scanner->current < sizeof scanner->source && _Xtal_INIScanner_Peek(scanner) != '\n') {
+            while (scanner->current < scanner->source.size && _Xtal_INIScanner_Peek(scanner) != '\n') {
                 _Xtal_INIScanner_Advance(scanner);
             }
         } break;
@@ -185,7 +148,7 @@ internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner
             u32 start_col    = scanner->col;
             u32 start_of_lit = scanner->current;
             while (_Xtal_INIScanner_Peek(scanner) != '"') {
-                if (scanner->current >= sizeof scanner->source) {
+                if (scanner->current >= scanner->source.size) {
                     _Xtal_INIScanner_ErrorAt(scanner, S8Lit("Unterminated string"), start_line, start_col);
                     ok = false;
                     goto end;
@@ -195,7 +158,6 @@ internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner
             token.type = Xtal_INIScanner_TokenType_String;
             // TODO(geni): Slices..
             token.literal = (Xtal_INIScanner_TokenLiteral){
-                .tag = Xtal_INIScanner_TokenLiteral_String8,
                 .str = {.str = scanner->source.str + start_of_lit, .size = scanner->source.size - start_of_lit - scanner->current},
             };
             token.line = start_line;
@@ -219,6 +181,7 @@ internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner
             token.type = Xtal_INIScanner_TokenType_RightBracket;
         } break;
         default:
+#if 0
             if (CharIsDigit(c)) {
                 u32 start_line = scanner->line;
                 u32 start_col  = scanner->col;
@@ -229,7 +192,9 @@ internal b32 Xtal_INIScanner_ScanToken(Xtal_INIScanner* scanner, Xtal_INIScanner
                 }
                 token.line = start_line;
                 token.col  = start_col;
-            } else if (CharIsAlpha(c)) {
+            } else
+#endif
+            if (CharIsAlpha(c) || CharIsDigit(c)) {
                 u32 start_line = scanner->line;
                 u32 start_col  = scanner->col;
                 if (!_Xtal_INIScannerHandleIdentifier(scanner, &token)) {
@@ -266,4 +231,5 @@ internal void Xtal_INIScanner_ScanTokens(Xtal_INIScanner* scanner) {
         .line = scanner->line,
         .col  = scanner->tokens[Xtal_ArenaArrayCount(scanner->tokens) - 1].col + 1,
     };
+    Xtal_ArenaArrayPush(scanner->tokens, token);
 }

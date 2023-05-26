@@ -58,32 +58,30 @@ internal void _Xtal_INIParser_ErrorAtCurrent(Xtal_INIParser* parser, String8 mes
     _Xtal_INIParser_ErrorAt(parser, message, _Xtal_INIParser_Peek(parser)->line, _Xtal_INIParser_Peek(parser)->col);
 }
 
-internal Xtal_INI Xtal_INIParse(String8 file) {
-    Xtal_INIScanner scanner = Xtal_INIScannerNew(S8Lit("aaa"), file);
+internal void     Xtal_INIAST_Expression(Xtal_INIParser* parser);
+internal Xtal_INI Xtal_INIParse(String8 filename, String8 contents) {
+    Xtal_INIScanner scanner = Xtal_INIScannerNew(filename, contents);
     Xtal_INIScanner_ScanTokens(&scanner);
 
     Xtal_INIParser parser = {
-        .scanner = &scanner,
+        .scanner  = &scanner,
+        .sections = Xtal_INISectionsHashMap_New(8),
     };
-
-    for (u32 i = 0; i < Xtal_ArenaArrayCount(scanner.tokens); ++i) {
-        String8 name = Xtal_INIScanner_TokenTypeName(scanner.tokens[i].type);
-        if (scanner.tokens[i].type == Xtal_INIScanner_TokenType_String) {
-            Log("%S = %S", name, scanner.tokens[i].literal.str);
-        }
-        switch (scanner.tokens[i].literal.tag) {
-            case Xtal_INIScanner_TokenLiteral_String8: Log("%S = %S", name, scanner.tokens[i].literal.str); break;
-            case Xtal_INIScanner_TokenLiteral_Real: Log("%S = %f", name, scanner.tokens[i].literal.real); break;
-            case Xtal_INIScanner_TokenLiteral_Number: Log("%S = %lli", name, scanner.tokens[i].literal.num); break;
-            default: scanner.tokens[i].lexeme.size == 0 ? Log("%S", name) : Log("%S = %S", name, scanner.tokens[i].lexeme);
-        }
-    }
-
     while (!_Xtal_INIParser_IsAtEnd(&parser)) {
         Xtal_INIAST_Expression(&parser);
     }
-
-    return (Xtal_INI){0};
+    return (Xtal_INI){
+        .sections = parser.sections,
+    };
 }
-internal Xtal_INIVarsHashMap* Xtal_INIGetSection(Xtal_INI* ini, String8 key);
-internal String8*             Xtal_INIGetVar(Xtal_INIVarsHashMap* section, String8 key);
+
+internal Xtal_INIVarsHashMap* Xtal_INIGetSection(Xtal_INI* ini, String8 name) {
+    Xtal_INIVarsHashMap* section_hm;
+    Xtal_INISectionsHashMap_Get(&ini->sections, name, XXH64(name.data, name.size, 0), &section_hm);
+    return section_hm;
+}
+internal String8* Xtal_INIGetVar(Xtal_INIVarsHashMap* hm, String8 name) {
+    String8* value;
+    Xtal_INIVarsHashMap_Get(hm, name, XXH64(name.data, name.size, 0), &value);
+    return value;
+}
