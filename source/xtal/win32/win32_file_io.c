@@ -1,4 +1,4 @@
-// TODO(geni): Creating message boxes for each error may be a bad idea. Perhaps we should let the game handle errors instead?
+// TODO(geni): Creating error messages for all of these is dumb and we should let the game handle errors instead (maybe make this opt-out)
 
 //~ File operations
 
