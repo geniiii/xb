@@ -17,9 +17,9 @@ internal void Xtal_INIAST_Binding(Xtal_INIParser* parser) {
         Xtal_INIVarsHashMap* hm;
         Xtal_INISectionsHashMap_Get(&parser->sections, parser->current_section, hash, &hm);
         // TODO(geni): This hashmap probably shouldn't have String8 as the value
-        //             edit: nevermind, I think it's fine now
+        //             EDIT: changed my mind; I think it's fine now
         // TODO(geni): I'm not sure if inserting result.right.str works with blank expressions like "varName ="
-        //             edit: I think it does?
+        //             EDIT: I think it does?
         Xtal_INIVarsHashMap_Insert(hm, result.identifier, XXH64(result.identifier.data, result.identifier.size, 0), result.right.str);
 
         if (!_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_EOL)) {
@@ -35,12 +35,24 @@ internal void Xtal_INIAST_Section(Xtal_INIParser* parser) {
     // TODO(geni): Proper error handling for all the potential error cases
     if (_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_LeftBracket)) {
         Xtal_INIScanner_Token* start = _Xtal_INIParser_PeekPrevious(parser);
+        Xtal_INIScanner_Token* section;
         if (!_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_Identifier)) {
+// NOTE(geni): Apparently blank section names are supported by Clickteam Fusion?!?
+#if 0
             Xtal_MArenaTemp scratch = Xtal_GetScratch(NULL, 0);
-            _Xtal_INIParser_ErrorAt(parser, S8_PushF(scratch.arena, "Expected literal, got %S instead", Xtal_INIScanner_TokenTypeName(_Xtal_INIParser_PeekPrevious(parser)->type)), start->line, start->col);
+            _Xtal_INIParser_ErrorAt(parser, S8_PushF(scratch.arena, "Expected identifier, got %S instead", Xtal_INIScanner_TokenTypeName(_Xtal_INIParser_PeekPrevious(parser)->type)), start->line, start->col);
+            Xtal_MArenaTempEnd(scratch);
             return;
+#else
+            section = &(Xtal_INIScanner_Token){
+                .type   = Xtal_INIScanner_TokenType_Identifier,
+                .lexeme = S8Lit(""),
+            };
+#endif
+        } else {
+            section = _Xtal_INIParser_PeekPrevious(parser);
         }
-        Xtal_INIScanner_Token* section = _Xtal_INIParser_PeekPrevious(parser);
+
         if (!_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_RightBracket)) {
             _Xtal_INIParser_ErrorAt(parser, S8Lit("Unterminated section (expected ']')"), start->line, start->col);
             return;

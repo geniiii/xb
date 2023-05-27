@@ -64,8 +64,9 @@ internal Xtal_INI Xtal_INIParse(String8 filename, String8 contents) {
     Xtal_INIScanner_ScanTokens(&scanner);
 
     Xtal_INIParser parser = {
-        .scanner  = &scanner,
-        .sections = Xtal_INISectionsHashMap_New(8),
+        .scanner         = &scanner,
+        .sections        = Xtal_INISectionsHashMap_New(8),
+        .current_section = S8Lit(""),
     };
     while (!_Xtal_INIParser_IsAtEnd(&parser)) {
         Xtal_INIAST_Expression(&parser);
@@ -75,13 +76,29 @@ internal Xtal_INI Xtal_INIParse(String8 filename, String8 contents) {
     };
 }
 
-internal Xtal_INIVarsHashMap* Xtal_INIGetSection(Xtal_INI* ini, String8 name) {
+internal Xtal_INIVarsHashMap* Xtal_INIGetSection(Xtal_INI* ini, String8 key) {
+    if (ini == NULL) {
+        return NULL;
+    }
     Xtal_INIVarsHashMap* section_hm;
-    Xtal_INISectionsHashMap_Get(&ini->sections, name, XXH64(name.data, name.size, 0), &section_hm);
+    if (!Xtal_INISectionsHashMap_Get(&ini->sections, key, XXH64(key.data, key.size, 0), &section_hm)) {
+        section_hm = NULL;
+    }
     return section_hm;
 }
-internal String8* Xtal_INIGetVar(Xtal_INIVarsHashMap* hm, String8 name) {
+internal String8* Xtal_INIGetVar(Xtal_INIVarsHashMap* hm, String8 key) {
+    if (hm == NULL) {
+        return NULL;
+    }
     String8* value;
-    Xtal_INIVarsHashMap_Get(hm, name, XXH64(name.data, name.size, 0), &value);
+    if (!Xtal_INIVarsHashMap_Get(hm, key, XXH64(key.data, key.size, 0), &value)) {
+        value = NULL;
+    }
     return value;
+}
+internal void Xtal_INIDestroy(Xtal_INI* ini) {
+    // TODO(geni): Unimplemented
+}
+
+internal String8 Xtal_INISerialize(Xtal_INI* ini, Xtal_MArena arena) {
 }
