@@ -17,6 +17,7 @@ internal void Game_HotLoad(Xtal_OSState* _os, b32 reloaded) {
     Xtal_INI settings = Xtal_INIParse(S8Lit("settings.ini"), contents);
     game->settings    = GameSettingsNew(&settings);
     Log("%u", game->settings.tickrate);
+    Xtal_INISerialize(&settings, (Xtal_MArena){0});
 
     if (!reloaded) {
         game->hide_ui = 0;

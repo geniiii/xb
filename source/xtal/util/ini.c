@@ -101,4 +101,30 @@ internal void Xtal_INIDestroy(Xtal_INI* ini) {
 }
 
 internal String8 Xtal_INISerialize(Xtal_INI* ini, Xtal_MArena arena) {
+    String8 result = {0};
+
+    u32 serialized_sections = 0;
+    for (u32 i = 0; i < ini->sections.capacity && serialized_sections < ini->sections.count; ++i) {
+        Xtal_INISectionsHashMap_Bucket* current_bucket = &ini->sections.buckets[i];
+        if (!_Xtal_HashMapOccupied(current_bucket->hash)) {
+            continue;
+        }
+        Xtal_INIVarsHashMap* current = &current_bucket->value;
+
+        Log("[%S]", current_bucket->key);
+        u32 serialized_vars = 0;
+        for (u32 j = 0; j < current->capacity && serialized_vars < current->count; ++j) {
+            Xtal_INIVarsHashMap_Bucket* var_bucket = &current->buckets[j];
+            if (!_Xtal_HashMapOccupied(var_bucket->hash)) {
+                continue;
+            }
+            String8* var = &var_bucket->value;
+            Log("%S = %S", var_bucket->key, *var);
+            ++serialized_vars;
+        }
+
+        ++serialized_sections;
+    }
+
+    return result;
 }
