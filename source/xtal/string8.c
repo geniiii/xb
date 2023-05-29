@@ -181,7 +181,8 @@ internal String8 S8_SubstrAfterLastOccurrenceOf(String8 str, char c) {
     }
     return (String8){
         .s    = on_last.s + 1,
-        .size = on_last.size - 1};
+        .size = on_last.size - 1,
+    };
 }
 
 internal String8 S8_SubstrOnFirstOccurrenceOf(String8 str, char c) {
