@@ -97,11 +97,21 @@ internal String8* Xtal_INIGetVar(Xtal_INIVarsHashMap* hm, String8 key) {
     return value;
 }
 internal void Xtal_INIDestroy(Xtal_INI* ini) {
-    // TODO(geni): Unimplemented
+    u32 destroyed_sections = 0;
+    for (u32 i = 0; i < ini->sections.capacity && destroyed_sections < ini->sections.count; ++i) {
+        Xtal_INISectionsHashMap_Bucket* current_bucket = &ini->sections.buckets[i];
+        if (!_Xtal_HashMapOccupied(current_bucket->hash)) {
+            continue;
+        }
+        Xtal_INIVarsHashMap_Destroy(&current_bucket->value);
+        ++destroyed_sections;
+        // TODO(geni): Unimplemented
+    }
+    Xtal_INISectionsHashMap_Destroy(&ini->sections);
 }
-
-internal String8 Xtal_INISerialize(Xtal_INI* ini, Xtal_MArena arena) {
-    String8 result = {0};
+internal String8 Xtal_INISerialize(Xtal_INI* ini, Xtal_MArena* arena) {
+    Xtal_MArenaTemp scratch = Xtal_GetScratch(NULL, 0);
+    S8List          list    = {0};
 
     u32 serialized_sections = 0;
     for (u32 i = 0; i < ini->sections.capacity && serialized_sections < ini->sections.count; ++i) {
@@ -111,7 +121,7 @@ internal String8 Xtal_INISerialize(Xtal_INI* ini, Xtal_MArena arena) {
         }
         Xtal_INIVarsHashMap* current = &current_bucket->value;
 
-        Log("[%S]", current_bucket->key);
+        S8ListPushF(&list, scratch.arena, "[%S]", current_bucket->key);
         u32 serialized_vars = 0;
         for (u32 j = 0; j < current->capacity && serialized_vars < current->count; ++j) {
             Xtal_INIVarsHashMap_Bucket* var_bucket = &current->buckets[j];
@@ -119,12 +129,13 @@ internal String8 Xtal_INISerialize(Xtal_INI* ini, Xtal_MArena arena) {
                 continue;
             }
             String8* var = &var_bucket->value;
-            Log("%S = %S", var_bucket->key, *var);
+            S8ListPushF(&list, scratch.arena, "%S = %S", var_bucket->key, *var);
             ++serialized_vars;
         }
 
         ++serialized_sections;
     }
 
-    return result;
+    Xtal_MArenaTempEnd(scratch);
+    return S8ListJoin(&list, arena, S8Lit("\n"));
 }
