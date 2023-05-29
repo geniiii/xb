@@ -95,4 +95,8 @@
             type_name##_Grow(hm, 2 * hm->capacity);                                                               \
         }                                                                                                         \
         return _##type_name##_InsertNoGrow(hm, key, hash, value);                                                 \
+    }                                                                                                             \
+    internal void type_name##_Destroy(type_name* hm) {                                                            \
+        Xtal_MArenaRelease(hm->arena);                                                                            \
+        Xtal_MArenaRelease(hm->arena_grow);                                                                       \
     }
