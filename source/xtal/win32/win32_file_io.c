@@ -300,7 +300,7 @@ internal b32 IterDirectory(Xtal_OSDirectoryItem* item) {
 
             // TODO(geni): Prepend subdirectory name to item name
             if (recursive) {
-                DirectoryPathNode* node = Xtal_MArenaPushStruct(state->arena, DirectoryPathNode);
+                DirectoryPathNode* node = Xtal_MArenaPushStructZero(state->arena, DirectoryPathNode);
                 node->path              = path;
                 Xtal_SLPush(state->recurse_list.first, state->recurse_list.last, node);
             }
