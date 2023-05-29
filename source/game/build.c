@@ -75,7 +75,9 @@
 #include "xtal/chars.c"
 #include "xtal/cstrings.c"
 #include "xtal/unicode.c"
+#include "xtal/util/linked_list.c"
 #include "xtal/string8.c"
+#include "xtal/string8list.c"
 #include "xtal/os.c"
 
 #include "xtal/util/bmp.c"
