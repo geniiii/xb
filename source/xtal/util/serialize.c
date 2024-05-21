@@ -14,14 +14,6 @@ internal void Xtal_SerializeData(Xtal_Serializer* serializer, void* data, u64 da
     serializer->offset += data_size;
 }
 
-#define Xtal_Serialize(serializer, data) Xtal_SerializeData(serializer, &data, sizeof(data))
-#define Xtal_SerializeV(serializer, data, _version) \
-    do {                                            \
-        if ((serializer)->version >= (_version)) {  \
-            Xtal_Serialize(serializer, data);       \
-        }                                           \
-    } while (0)
-
 internal void Xtal_SerializeString8(Xtal_Serializer* serializer, String8* str, Xtal_MArena* arena) {
     Xtal_Serialize(serializer, str->size);
     switch (serializer->operation) {

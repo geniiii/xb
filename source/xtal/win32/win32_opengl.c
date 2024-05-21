@@ -15,7 +15,7 @@ internal void* LoadOpenGLProcedure(const char* name) {
         HMODULE module = LoadLibraryA("opengl32.dll");
         p              = (void*) GetProcAddress(module, name);
         if (p == NULL) {
-            LogWarning("Failed to load procedure %s (%S)", name, FormatErrorCode(scratch.arena, GetLastError()));
+            LogWarning("Failed to load procedure %s; error: %S", name, FormatErrorCode(scratch.arena, GetLastError()));
         }
         Xtal_MArenaTempEnd(scratch);
     }
@@ -47,7 +47,7 @@ internal b32 InitOpenGL(HDC device_context) {
 
     i32 pixel_format = ChoosePixelFormat(device_context, &pfd);
     if (!pixel_format) {
-        OutputErrorMessage("Fatal Error", "Could not initialize WGL");
+        OutputErrorMessage("Fatal Error", "Could not initialize WGL (failed to get initial pixel format)");
         return 0;
     }
 
@@ -80,7 +80,7 @@ internal b32 InitOpenGL(HDC device_context) {
         wglChoosePixelFormatARB(device_context, pf_attribs_i, 0, 1, &pixel_format, &num_formats);
 
         if (!pixel_format) {
-            OutputErrorMessage("Fatal Error", "Could not initialize WGL");
+            OutputErrorMessage("Fatal Error", "Could not initialize WGL (failed to get real pixel format)");
             return 0;
         }
     }
@@ -104,7 +104,7 @@ internal b32 InitOpenGL(HDC device_context) {
         wglMakeCurrent(device_context, 0);
         wglDeleteContext(gl_dummy_render_context);
         wglMakeCurrent(device_context, global_opengl_render_context);
-        wglSwapIntervalEXT(1);
+        wglSwapIntervalEXT(0);
         return 1;
     }
 

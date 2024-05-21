@@ -9,7 +9,8 @@ internal void UpdateClipRect(void) {
           .left   = cx - 1,
           .right  = cx + 1,
           .top    = cy - 1,
-          .bottom = cy + 1};
+          .bottom = cy + 1,
+    };
     if (!ClipCursor(&rect)) {
         LogError("Failed to clip cursor");
     }
@@ -17,7 +18,6 @@ internal void UpdateClipRect(void) {
 
 internal void RawMouseDeviceChangeState(b32 enable) {
     String8 verb = enable ? S8Lit("register") : S8Lit("unregister");
-
     if (enable == global_raw_mouse_registered) {
         LogWarning("Tried to pointlessly %S raw mouse input device", verb);
         return;
@@ -38,22 +38,30 @@ internal void RawMouseDeviceChangeState(b32 enable) {
     global_raw_mouse_registered = enable;
 }
 
-internal void ToggleCursor(b32 show) {
+internal void _ToggleCursor() {
+    b32 show = !global_os.cursor_locked;
     if (global_os.raw_mouse_input && global_raw_mouse_registered == show) {
         RawMouseDeviceChangeState(!show);
     }
 
-    global_os.cursor_locked = !show;
+    global_cursor_toggled = 0;
     // NOTE(geni): I hate Win32
     //             ShowCursor returns an internal cursor state counter... which can be over 1 or under 0. Passing 1 increments it, 0 decrements it. Why?!
     //             We need to do these stupid while loops to get around the neverending stream of Microsoft insanity :((
     if (show) {
-        while (ShowCursor(show) <= 0) {}
+        while (ShowCursor(1) <= 0) {}
         ClipCursor(NULL);
     } else {
-        while (ShowCursor(show) >= 0) {}
+        while (ShowCursor(0) >= 0) {}
         UpdateClipRect();
     }
+}
+internal void ToggleCursor(b32 show) {
+    global_os.cursor_locked = !show;
+    global_cursor_toggled   = 1;
+    // NOTE(geni): I hate Win32
+    //             ShowCursor returns an internal cursor state counter... which can be over 1 or under 0. Passing 1 increments it, 0 decrements it. Why?!
+    //             We need to do these stupid while loops to get around the neverending stream of Microsoft insanity :((
 }
 
 internal void ToggleRawMouse(b32 enable) {
@@ -64,11 +72,14 @@ internal void ToggleRawMouse(b32 enable) {
 internal void HandleRawInputMessage(LPARAM l_param) {
     Xtal_MArenaTemp scratch = Xtal_GetScratch(NULL, 0);
 
-    u32 size;
-    GetRawInputData((HRAWINPUT) l_param, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+    u32 size = 0;
+    if (GetRawInputData((HRAWINPUT) l_param, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER))) {
+        LogWarning("Failed to get size of raw input data");
+        goto end;
+    }
     u8* buf = Xtal_MArenaPush(scratch.arena, size);
     if (GetRawInputData((HRAWINPUT) l_param, RID_INPUT, buf, &size, sizeof(RAWINPUTHEADER)) != size) {
-        LogWarning("Failed to get raw input data; error: %S", FormatErrorCodeS16(scratch.arena, GetLastError()));
+        LogWarning("Failed to get raw input data");
         goto end;
     }
     RAWINPUT* input = (RAWINPUT*) buf;

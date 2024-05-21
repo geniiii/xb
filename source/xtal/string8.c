@@ -205,7 +205,8 @@ internal String8 S8_SubstrAfterFirstOccurrenceOf(String8 str, char c) {
     }
     return (String8){
         .s    = on_first.s + 1,
-        .size = on_first.size - 1};
+        .size = on_first.size - 1,
+    };
 }
 
 internal inline String8 S8_SubstrOnIndex(String8 str, u64 index) {
@@ -223,28 +224,29 @@ internal inline String8 S8_SubstrAfterIndex(String8 str, u64 index) {
 }
 
 // TODO(geni): Make our own CString/String to I32/U32/F32/whatever functions
-internal i64 S8_GetFirstI64(String8 string) {
+internal i64 S8_GetFirstI64(String8 str) {
     b32 found_first_digit     = 0;
     u64 integer_str_write_pos = 0;
-    u8  integer_str[64]       = {0};
+    u8  integer_str[64];
+    integer_str[0] = '\0';
 
-    for (u64 read_pos = 0; read_pos < string.size; ++read_pos) {
+    for (u64 read_pos = 0; read_pos < str.size; ++read_pos) {
         if (found_first_digit) {
             // NOTE(geni): Can't write any more characters to buffer
-            if (integer_str_write_pos == sizeof(integer_str)) {
-                integer_str[sizeof(integer_str) - 1] = '\0';
+            if (integer_str_write_pos == ArrayCount(integer_str)) {
+                integer_str[ArrayCount(integer_str) - 1] = '\0';
                 break;
             }
-            if (CharIsDigit(string.s[read_pos]) || string.s[read_pos] == '-') {
-                integer_str[integer_str_write_pos++] = string.s[read_pos];
+            if (CharIsDigit(str.s[read_pos]) || str.s[read_pos] == '-') {
+                integer_str[integer_str_write_pos++] = str.s[read_pos];
             } else {
                 // NOTE(geni): Integer is over
                 integer_str[integer_str_write_pos] = '\0';
                 break;
             }
         } else {
-            if (CharIsDigit(string.s[read_pos]) || string.s[read_pos] == '-') {
-                integer_str[integer_str_write_pos++] = string.s[read_pos];
+            if (CharIsDigit(str.s[read_pos]) || str.s[read_pos] == '-') {
+                integer_str[integer_str_write_pos++] = str.s[read_pos];
                 found_first_digit                    = 1;
             }
         }

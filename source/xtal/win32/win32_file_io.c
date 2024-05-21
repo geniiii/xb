@@ -202,12 +202,12 @@ typedef struct {
 } DirectoryPathList;
 
 typedef struct {
-    String16                  path;
     Xtal_OSDirectoryItem      item;
     DirectoryPathList         recurse_list;
-    Xtal_OSDirectoryIterFlags flags;
+    String16                  path;
     HANDLE                    file;
     Xtal_MArena*              arena;
+    Xtal_OSDirectoryIterFlags flags;
 } DirectoryIterState;
 
 // TODO(geni): Directory iteration results in a significant number of (fairly inexpensive) allocations, maybe we should cut down on them a little?
@@ -321,6 +321,7 @@ internal b32 IterDirectory(Xtal_OSDirectoryItem* item) {
     item->name      = S8_PushFromS16(state->arena, S16_FromWString(find_data.cFileName));
     item->extension = S8_SubstrAfterLastOccurrenceOf(item->name, '.');
     item->flags     = 0;
+    item->path      = S8_PushFromS16(state->arena, state->path);
 
     return 1;
 }
@@ -329,7 +330,9 @@ internal b32 IterDirectory(Xtal_OSDirectoryItem* item) {
 
 internal b32 MemoryMapCreateFile(String16 path, Xtal_OS_MMapFlags open_method, Xtal_OS_MMapFlags permissions, HANDLE* file_out) {
     DWORD desired_access = GENERIC_READ;
-    if (permissions & Xtal_OS_MMapFlags_ReadWrite) desired_access |= GENERIC_WRITE;
+    if (permissions & Xtal_OS_MMapFlags_ReadWrite) {
+        desired_access |= GENERIC_WRITE;
+    }
 
     u32    result = 1;
     HANDLE file;
@@ -471,7 +474,7 @@ internal void DeleteDirectory(String8 path) {
     Xtal_MArenaTemp scratch  = Xtal_GetScratch(NULL, 0);
     String16        s16_path = S16_PushFromS8(scratch.arena, path);
     // NOTE(geni): Because SHFileOperation is a dumb fucking function and requires doubly null-terminated paths
-    Xtal_MArenaPushTypeTemp(u16);
+    Xtal_MArenaPushType(scratch.arena, u16);
     s16_path.s[s16_path.size + 1] = L'\0';
     DeleteDirectoryS16(s16_path);
     Xtal_MArenaTempEnd(scratch);

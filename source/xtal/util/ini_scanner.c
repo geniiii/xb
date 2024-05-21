@@ -1,12 +1,3 @@
-#define XTAL_INISCANNER_MAX_ERRORS 256
-
-typedef u32 Xtal_INIScanner_TokenType;
-enum {
-#define TokenType(name) Xtal_INIScanner_TokenType_##name,
-#include "ini_tokens.inc"
-#undef TokenType
-    Xtal_INIScanner_TokenType_Count,
-};
 internal String8 Xtal_INIScanner_TokenTypeName(Xtal_INIScanner_TokenType index) {
     local_persist String8 strings[Xtal_INIScanner_TokenType_Count] = {
 #define TokenType(name) S8LitComp(#name),
@@ -16,37 +7,6 @@ internal String8 Xtal_INIScanner_TokenTypeName(Xtal_INIScanner_TokenType index) 
 
     return index < ArrayCount(strings) ? strings[index] : S8Lit("Invalid");
 }
-
-typedef struct {
-    String8 str;
-} Xtal_INIScanner_TokenLiteral;
-
-typedef struct {
-    Xtal_INIScanner_TokenType    type;
-    u32                          line;
-    u32                          col;
-    String8                      lexeme;
-    Xtal_INIScanner_TokenLiteral literal;
-} Xtal_INIScanner_Token;
-
-typedef struct {
-    String8 message;
-    u32     line;
-    u32     col;
-} Xtal_INIScanner_Error;
-
-typedef struct {
-    String8                file;
-    String8                source;
-    u32                    start;
-    u32                    current;
-    u32                    line;
-    u32                    col;
-    Xtal_INIScanner_Token* tokens;
-    Xtal_INIScanner_Error  errors[XTAL_INISCANNER_MAX_ERRORS];
-    b32                    unterminated_assignment;
-    u32                    error_count;
-} Xtal_INIScanner;
 
 internal Xtal_INIScanner Xtal_INIScannerNew(String8 file, String8 source) {
     return (Xtal_INIScanner){
@@ -58,11 +18,11 @@ internal Xtal_INIScanner Xtal_INIScannerNew(String8 file, String8 source) {
 
 internal void _Xtal_INIScanner_ErrorAt(Xtal_INIScanner* scanner, String8 message, u32 line, u32 col) {
     if (scanner->error_count == sizeof scanner->errors - 2) {
-        scanner->errors[scanner->error_count] = (Xtal_INIScanner_Error){
+        scanner->errors[scanner->error_count] = (Xtal_INIError){
             .message = S8Lit("Reached error limit"),
         };
     }
-    scanner->errors[scanner->error_count++] = (Xtal_INIScanner_Error){
+    scanner->errors[scanner->error_count++] = (Xtal_INIError){
         .message = message,
         .line    = line,
         .col     = col,
@@ -97,7 +57,7 @@ internal b32 _Xtal_INIScanner_Match(Xtal_INIScanner* scanner, u8 expected) {
 internal b32 _Xtal_INIScannerHandleIdentifier(Xtal_INIScanner* scanner, Xtal_INIScanner_Token* token) {
     u32 start = scanner->current - 1;
 
-    while (scanner->current < scanner->source.size && scanner->unterminated_assignment ? (_Xtal_INIScanner_Peek(scanner) != '\r' && _Xtal_INIScanner_Peek(scanner) != '\n') : (CharIsAlpha(_Xtal_INIScanner_Peek(scanner)) || CharIsDigit(_Xtal_INIScanner_Peek(scanner)))) {
+    while (scanner->current < scanner->source.size && scanner->unterminated_assignment ? (_Xtal_INIScanner_Peek(scanner) != '\r' && _Xtal_INIScanner_Peek(scanner) != '\n') : (CharIsAlpha(_Xtal_INIScanner_Peek(scanner)) || CharIsDigit(_Xtal_INIScanner_Peek(scanner))) || _Xtal_INIScanner_Peek(scanner) == '_') {
         _Xtal_INIScanner_Advance(scanner);
     }
 
@@ -229,7 +189,7 @@ internal void Xtal_INIScanner_ScanTokens(Xtal_INIScanner* scanner) {
     token = (Xtal_INIScanner_Token){
         .type = Xtal_INIScanner_TokenType_EOF,
         .line = scanner->line,
-        .col  = scanner->tokens[Xtal_ArenaArrayCount(scanner->tokens) - 1].col + 1,
+        .col  = Xtal_ArenaArrayCount(scanner->tokens) > 0 ? scanner->tokens[Xtal_ArenaArrayCount(scanner->tokens) - 1].col + 1 : 0,
     };
     Xtal_ArenaArrayPush(scanner->tokens, token);
 }

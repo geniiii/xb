@@ -1,29 +1,10 @@
 internal b32 Xtal_HashMapCompare_String8(String8* a, String8 b, u64 b_hash) {
     return a->size == b.size && XXH64(a->data, a->size, 0) == b_hash && memcmp(a->data, b.data, b.size) == 0;
 }
-
 Xtal_HashMapDefineNamed(String8, String8, Xtal_INIVarsHashMap, Xtal_HashMapCompare_String8)
     Xtal_HashMapDefineNamed(String8, Xtal_INIVarsHashMap, Xtal_INISectionsHashMap, Xtal_HashMapCompare_String8)
 
-        typedef Xtal_INIScanner_Error Xtal_INIParser_Error;
-#define XTAL_INIPARSER_MAX_ERRORS XTAL_INISCANNER_MAX_ERRORS
-
-typedef struct {
-    Xtal_INISectionsHashMap sections;
-} Xtal_INI;
-
-typedef struct {
-    Xtal_INIScanner*        scanner;
-    u32                     current;
-    String8                 current_section;
-    u32                     error_count;
-    Xtal_INIParser_Error    errors[XTAL_INIPARSER_MAX_ERRORS];
-    b32                     panic_mode;
-    Xtal_MArena             arena;
-    Xtal_INISectionsHashMap sections;
-} Xtal_INIParser;
-
-internal Xtal_INIScanner_Token* _Xtal_INIParser_Peek(Xtal_INIParser* parser) {
+        internal Xtal_INIScanner_Token* _Xtal_INIParser_Peek(Xtal_INIParser* parser) {
     return &parser->scanner->tokens[parser->current];
 }
 internal Xtal_INIScanner_Token* _Xtal_INIParser_PeekPrevious(Xtal_INIParser* parser) {
@@ -44,11 +25,11 @@ internal b32 _Xtal_INIParser_Consume(Xtal_INIParser* parser, Xtal_INIScanner_Tok
 }
 internal void _Xtal_INIParser_ErrorAt(Xtal_INIParser* parser, String8 message, u32 line, u32 col) {
     if (parser->error_count == sizeof parser->errors - 2) {
-        parser->errors[parser->error_count] = (Xtal_INIParser_Error){
+        parser->errors[parser->error_count] = (Xtal_INIError){
             .message = S8Lit("Reached error limit"),
         };
     }
-    parser->errors[parser->error_count++] = (Xtal_INIParser_Error){
+    parser->errors[parser->error_count++] = (Xtal_INIError){
         .message = message,
         .line    = line,
         .col     = col,
@@ -71,9 +52,17 @@ internal Xtal_INI Xtal_INIParse(String8 filename, String8 contents) {
     while (!_Xtal_INIParser_IsAtEnd(&parser)) {
         Xtal_INIAST_Expression(&parser);
     }
-    return (Xtal_INI){
+    Xtal_INI result = {
         .sections = parser.sections,
     };
+    // NOTE(geni): It's not possible for error_count to go over the maximum size of result.errors
+    for (u32 i = 0; i < parser.error_count; ++i) {
+        result.errors[result.error_count++] = &parser.errors[i];
+    }
+    for (u32 i = 0; i < scanner.error_count; ++i) {
+        result.errors[result.error_count++] = &scanner.errors[i];
+    }
+    return result;
 }
 
 internal Xtal_INIVarsHashMap* Xtal_INIGetSection(Xtal_INI* ini, String8 key) {
@@ -86,6 +75,17 @@ internal Xtal_INIVarsHashMap* Xtal_INIGetSection(Xtal_INI* ini, String8 key) {
     }
     return section_hm;
 }
+internal Xtal_INIVarsHashMap* Xtal_INICreateSection(Xtal_INI* ini, String8 key) {
+    if (ini == NULL) {
+        return NULL;
+    }
+    Xtal_INIVarsHashMap* section_hm;
+    if (!Xtal_INISectionsHashMap_Get(&ini->sections, key, XXH64(key.data, key.size, 0), &section_hm)) {
+        u64 index = Xtal_INISectionsHashMap_Insert(&ini->sections, key, XXH64(key.data, key.size, 0), Xtal_INIVarsHashMap_New(8));
+        return &ini->sections.buckets[index].value;
+    }
+    return NULL;
+}
 internal String8* Xtal_INIGetVar(Xtal_INIVarsHashMap* hm, String8 key) {
     if (hm == NULL) {
         return NULL;
@@ -96,6 +96,17 @@ internal String8* Xtal_INIGetVar(Xtal_INIVarsHashMap* hm, String8 key) {
     }
     return value;
 }
+internal void Xtal_INISetVar(Xtal_INIVarsHashMap* hm, String8 key, String8 val) {
+    if (hm == NULL) {
+        return;
+    }
+    String8* value;
+    if (!Xtal_INIVarsHashMap_Get(hm, key, XXH64(key.data, key.size, 0), &value)) {
+        Xtal_INIVarsHashMap_Insert(hm, key, XXH64(key.data, key.size, 0), val);
+    } else {
+        *value = val;
+    }
+}
 internal void Xtal_INIDestroy(Xtal_INI* ini) {
     u32 destroyed_sections = 0;
     for (u32 i = 0; i < ini->sections.capacity && destroyed_sections < ini->sections.count; ++i) {
@@ -105,7 +116,6 @@ internal void Xtal_INIDestroy(Xtal_INI* ini) {
         }
         Xtal_INIVarsHashMap_Destroy(&current_bucket->value);
         ++destroyed_sections;
-        // TODO(geni): Unimplemented
     }
     Xtal_INISectionsHashMap_Destroy(&ini->sections);
 }
@@ -136,6 +146,16 @@ internal String8 Xtal_INISerialize(Xtal_INI* ini, Xtal_MArena* arena) {
         ++serialized_sections;
     }
 
+    String8 result = S8ListJoin(&list, arena, S8Lit("\n"));
     Xtal_MArenaTempEnd(scratch);
-    return S8ListJoin(&list, arena, S8Lit("\n"));
+    return result;
+}
+
+internal b32 Xtal_INILogErrors(Xtal_INI* ini) {
+    if (ini->error_count > 0) {
+        for (u32 i = 0; i < ini->error_count; ++i) {
+        }
+        return 1;
+    }
+    return 0;
 }

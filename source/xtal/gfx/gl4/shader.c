@@ -1,11 +1,3 @@
-#include "../../generated/shaders.c"
-
-typedef struct {
-    XGL_SType       type;
-    GLuint          handle;
-    XGL_ShaderInfo* info;
-} XGL_Shader;
-
 internal void _XGL_ShaderFatal(GLuint handle, String8 adverb, String8 name,
                                void (*log_fn)(GLuint, GLint, GLint*, char*),
                                void (*iv_fn)(GLuint, GLuint, GLint*)) {

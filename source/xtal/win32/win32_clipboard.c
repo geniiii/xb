@@ -1,5 +1,5 @@
 #if !defined(UNICODE)
-#error UNICODE is not defined - things *will* break if you ignore this error!
+#error UNICODE is not defined; things *will* break if this is ignored!
 #endif
 
 internal b32 GetClipboard(Xtal_MArena* arena, String8* out) {
@@ -18,7 +18,7 @@ internal b32 GetClipboard(Xtal_MArena* arena, String8* out) {
     // NOTE(geni): Get text
     {
         HANDLE data_handle = GetClipboardData(CF_UNICODETEXT);
-        // NOTE(geni): This call won't compile if you don't define UNICODE, because Win32
+        // NOTE(geni): This won't compile if you don't define UNICODE, because Win32
         u16* text = GlobalLock(data_handle);
         if (text == NULL) {
             // TODO(geni): When the fuck does this even happen!?

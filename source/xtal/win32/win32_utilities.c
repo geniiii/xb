@@ -1,8 +1,9 @@
 //~ Message output
 
 internal String16 _FormatErrorCode(DWORD error) {
-    local_persist WCHAR buffer[4096];
-    DWORD               size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, buffer, ArrayCount(buffer), NULL);
+    thread_local local_persist WCHAR buffer[4096];
+
+    DWORD size = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, buffer, ArrayCount(buffer), NULL);
     return (String16){buffer, size - 2};
 }
 internal String8 FormatErrorCode(Xtal_MArena* arena, DWORD error) {

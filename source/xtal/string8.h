@@ -26,3 +26,17 @@ typedef struct {
     local_persist String8 name = {              \
         .cstr = &_##name##_data[0],             \
     }
+
+internal String8        S8_FromWString(u8* wstr);
+internal String8        S8_Push(Xtal_MArena* arena, u64 size);
+internal String8        S8_PushCopy(Xtal_MArena* arena, String8 str);
+internal String8        S8_PushFromS8(Xtal_MArena* arena, String8 str);
+internal String8        S8_PushFV(Xtal_MArena* arena, const char* fmt, va_list args);
+internal String8        S8_PushF(Xtal_MArena* arena, const char* fmt, ...);
+internal void           S8_CopyToFixedSizeBuffer(String8 str, void* buf);
+internal String8        S8_SubstrOnLastOccurrenceOf(String8 str, char c);
+internal String8        S8_SubstrAfterLastOccurrenceOf(String8 str, char c);
+internal String8        S8_SubstrUntilLastOccurrenceOf(String8 str, char c);
+internal inline String8 S8_SubstrOnIndex(String8 str, u64 index);
+internal inline String8 S8_SubstrAfterIndex(String8 str, u64 index);
+internal i64            S8_GetFirstI64(String8 str);

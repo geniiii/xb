@@ -99,7 +99,7 @@ enum {
 
 //~ Memory mapped files
 
-// TODO(geni): This may honestly be better just having a void* handle or something, but I don't know how memory mapping works on other platforms
+// TODO(geni): This may honestly be better off just having a void* handle or something, but I don't know how memory mapping works on other platforms
 typedef struct {
     u32 id;
     u32 generation;

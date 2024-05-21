@@ -23,7 +23,9 @@ global Xtal_CursorStyle global_cursor_style = Xtal_CursorStyle_Normal;
 
 global DWORD global_main_thread_id;
 global i32   global_show_command;
+global b32   global_cursor_toggled;
 
+// NOTE(geni): MMap translations may be pointless, need to investigate how handles work on future candidates for support
 #define MAX_MMAP_HANDLES 128
 typedef struct {
     HANDLE object;
@@ -130,10 +132,13 @@ internal LRESULT CALLBACK WinProc(HWND window_handle, UINT message, WPARAM w_par
                 return DefWindowProcW(window_handle, message, w_param, l_param);
             }
         } break;
+
         case WM_CLOSE:
         case WM_DESTROY:
         case WM_QUIT: {
+            // TODO(geni): Not even sure if this path even does anything as these messages may never get dispatched
             global_os.quit = 1;
+            return 0;
         }
         default: {
             return DefWindowProcW(window_handle, message, w_param, l_param);
@@ -143,7 +148,7 @@ internal LRESULT CALLBACK WinProc(HWND window_handle, UINT message, WPARAM w_par
     return 0;
 }
 
-internal void ProcessEvents() {
+internal void ProcessEvents(void) {
     // NOTE(geni): Do !!NOT!! call DefWindowProcW here; it won't work.
     //             This isn't called by our WinProc, it's called by our game thread.
     MSG msg;
@@ -302,78 +307,73 @@ internal DWORD WINAPI MainThread(LPVOID user_data) {
     InitCOM();
 
     // NOTE(geni): Initialize remaining platform stuff
-    {
-        global_os.executable_folder_path = S8_PushFromS16(&global_os_arena, global_executable_directory);
-        global_os.working_directory_path = S8_PushFromS16(&global_os_arena, global_working_directory);
+    global_os.executable_folder_path = S8_PushFromS16(&global_os_arena, global_executable_directory);
+    global_os.working_directory_path = S8_PushFromS16(&global_os_arena, global_working_directory);
 
-        global_os.window_size.x = DEFAULT_WINDOW_WIDTH;
-        global_os.window_size.y = DEFAULT_WINDOW_HEIGHT;
+    global_os.window_size.x = DEFAULT_WINDOW_WIDTH;
+    global_os.window_size.y = DEFAULT_WINDOW_HEIGHT;
 
-        global_os.mmap_handles = Xtal_PoolNew(&global_os_arena, MAX_MMAP_HANDLES);
+    global_os.mmap_handles = Xtal_PoolNew(&global_os_arena, MAX_MMAP_HANDLES);
 
-        // TODO(geni): Maybe put these in a .inc (or Metadesk)
-        global_os.OpenFile       = _OpenFile;
-        global_os.WriteToFile    = WriteToFile;
-        global_os.SaveToFile     = SaveToFile;
-        global_os.AppendToFile   = AppendToFile;
-        global_os.LoadEntireFile = LoadEntireFile;
-        global_os.ReadFromFileTo = ReadFromFileTo;
-        global_os.GetFileSize    = _GetFileSize;
-        global_os.CloseFile      = CloseFile;
-        global_os.DeleteFile     = DeleteFile;
-        global_os.CopyFile       = CopyFile;
-        global_os.FileExists     = FileExists;
+    // TODO(geni): Maybe put these in a .inc (or Metadesk)
+    global_os.OpenFile       = _OpenFile;
+    global_os.WriteToFile    = WriteToFile;
+    global_os.SaveToFile     = SaveToFile;
+    global_os.AppendToFile   = AppendToFile;
+    global_os.LoadEntireFile = LoadEntireFile;
+    global_os.ReadFromFileTo = ReadFromFileTo;
+    global_os.GetFileSize    = _GetFileSize;
+    global_os.CloseFile      = CloseFile;
+    global_os.DeleteFile     = DeleteFile;
+    global_os.CopyFile       = CopyFile;
+    global_os.FileExists     = FileExists;
 
-        global_os.MakeDirectory   = MakeDirectory;
-        global_os.DeleteDirectory = DeleteDirectory;
-        global_os.DirectoryExists = DirectoryExists;
+    global_os.MakeDirectory   = MakeDirectory;
+    global_os.DeleteDirectory = DeleteDirectory;
+    global_os.DirectoryExists = DirectoryExists;
 
-        global_os.CreateFileOpenDialog     = CreateFileOpenDialog;
-        global_os.CreateFileSaveDialog     = CreateFileSaveDialog;
-        global_os.SaveToFileFromPicker     = SaveToFileFromPicker;
-        global_os.AppendToFileFromPicker   = AppendToFileFromPicker;
-        global_os.LoadEntireFileFromPicker = LoadEntireFileFromPicker;
-        global_os.DeleteFileFromPicker     = DeleteFileFromPicker;
+    global_os.CreateFileOpenDialog     = CreateFileOpenDialog;
+    global_os.CreateFileSaveDialog     = CreateFileSaveDialog;
+    global_os.SaveToFileFromPicker     = SaveToFileFromPicker;
+    global_os.AppendToFileFromPicker   = AppendToFileFromPicker;
+    global_os.LoadEntireFileFromPicker = LoadEntireFileFromPicker;
+    global_os.DeleteFileFromPicker     = DeleteFileFromPicker;
 
-        global_os.MemoryMapFile = MemoryMapFile;
-        global_os.UnmapFile     = UnmapFile;
+    global_os.MemoryMapFile = MemoryMapFile;
+    global_os.UnmapFile     = UnmapFile;
 
-        global_os.BeginIterDirectory = BeginIterDirectory;
-        global_os.IterDirectory      = IterDirectory;
+    global_os.BeginIterDirectory = BeginIterDirectory;
+    global_os.IterDirectory      = IterDirectory;
 
-        global_os.GetClipboard = GetClipboard;
-        global_os.SetClipboard = SetClipboard;
+    global_os.GetClipboard = GetClipboard;
+    global_os.SetClipboard = SetClipboard;
 
-        global_os.GetTimestamp        = GetTimestamp;
-        global_os.DateTimeToTimestamp = DateTimeToTimestamp;
-        global_os.GetDateTime         = GetDateTime;
-        global_os.TimestampToDateTime = TimestampToDateTime;
-        global_os.GetCycles           = GetCycles;
-        global_os.GetTickRate         = GetTickRate;
-        global_os.SetTickRate         = SetTickRate;
+    global_os.GetTimestamp        = GetTimestamp;
+    global_os.DateTimeToTimestamp = DateTimeToTimestamp;
+    global_os.GetDateTime         = GetDateTime;
+    global_os.TimestampToDateTime = TimestampToDateTime;
+    global_os.GetCycles           = GetCycles;
+    global_os.GetTickRate         = GetTickRate;
+    global_os.SetTickRate         = SetTickRate;
 
-        global_os.ToggleCursor   = ToggleCursor;
-        global_os.ToggleRawMouse = ToggleRawMouse;
+    global_os.ToggleCursor   = ToggleCursor;
+    global_os.ToggleRawMouse = ToggleRawMouse;
 
-        global_os.RefreshScreen       = OpenGLRefreshScreen;
-        global_os.LoadOpenGLProcedure = LoadOpenGLProcedure;
+    global_os.RefreshScreen       = OpenGLRefreshScreen;
+    global_os.LoadOpenGLProcedure = LoadOpenGLProcedure;
 
-        global_os.CreateThread  = _CreateThread;
-        global_os.JoinThread    = JoinThread;
-        global_os.DetachThread  = DetachThread;
-        global_os.DestroyThread = DestroyThread;
+    global_os.CreateThread  = _CreateThread;
+    global_os.JoinThread    = JoinThread;
+    global_os.DetachThread  = DetachThread;
+    global_os.DestroyThread = DestroyThread;
 
-        global_os.OutputErrorMessage = OutputErrorMessage;
-        global_os.WriteToConsole     = WriteToConsole;
-    }
+    global_os.OutputErrorMessage = OutputErrorMessage;
+    global_os.WriteToConsole     = WriteToConsole;
 
-    // NOTE(rjf): OpenGL initialization
-    {
-        global_device_context = GetDC(window_handle);
-        if (!InitOpenGL(global_device_context)) {
-            OutputErrorMessage("Fatal Error", "OpenGL initialization failure");
-            goto quit;
-        }
+    global_device_context = GetDC(window_handle);
+    if (!InitOpenGL(global_device_context)) {
+        OutputErrorMessage("Fatal Error", "OpenGL initialization failure");
+        goto quit;
     }
 
     // NOTE(geni): Load app code
@@ -436,12 +436,10 @@ i32 WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR lp_cmd_lin
 
 #if XTAL_DEBUG
     // NOTE(geni): Open debug console
-    {
-        global_conout_handle = CreateFileA("CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
-        SoftAssert(global_conout_handle != INVALID_HANDLE_VALUE);
-        SetStdHandle(STD_OUTPUT_HANDLE, global_conout_handle);
-        SetStdHandle(STD_ERROR_HANDLE, global_conout_handle);
-    }
+    global_conout_handle = CreateFileA("CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+    SoftAssert(global_conout_handle != INVALID_HANDLE_VALUE);
+    SetStdHandle(STD_OUTPUT_HANDLE, global_conout_handle);
+    SetStdHandle(STD_ERROR_HANDLE, global_conout_handle);
 #endif
 
     // NOTE(geni): Initialize platform arenas
@@ -521,9 +519,16 @@ i32 WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR lp_cmd_lin
 
     while (!global_os.quit) {
         MSG msg;
-        GetMessageW(&msg, 0, 0, 0);
+        // TODO(geni): This doesn't work??!??!?!
+        if (GetMessageW(&msg, window_handle, 0, 0) == 0) {
+            global_os.quit = 1;
+        }
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
+
+        if (global_cursor_toggled) {
+            _ToggleCursor();
+        }
     }
     WaitForSingleObject(main_thread, 1000);
     CloseHandle(main_thread);

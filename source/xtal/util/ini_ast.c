@@ -5,12 +5,12 @@ typedef struct {
 
 internal void Xtal_INIAST_Binding(Xtal_INIParser* parser) {
     if (_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_Identifier)) {
-        BindingExpr result = {
+        BindingExpr expr = {
             .identifier = _Xtal_INIParser_PeekPrevious(parser)->lexeme,
         };
         if (_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_Equal)) {
             if (_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_String)) {
-                result.right = _Xtal_INIParser_PeekPrevious(parser)->literal;
+                expr.right = _Xtal_INIParser_PeekPrevious(parser)->literal;
             }
         }
         u64                  hash = XXH64(parser->current_section.data, parser->current_section.size, 0);
@@ -18,9 +18,9 @@ internal void Xtal_INIAST_Binding(Xtal_INIParser* parser) {
         Xtal_INISectionsHashMap_Get(&parser->sections, parser->current_section, hash, &hm);
         // TODO(geni): This hashmap probably shouldn't have String8 as the value
         //             EDIT: changed my mind; I think it's fine now
-        // TODO(geni): I'm not sure if inserting result.right.str works with blank expressions like "varName ="
+        // TODO(geni): I'm not sure if inserting expr.right.str works with blank expressions like "varName ="
         //             EDIT: I think it does?
-        Xtal_INIVarsHashMap_Insert(hm, result.identifier, XXH64(result.identifier.data, result.identifier.size, 0), result.right.str);
+        Xtal_INIVarsHashMap_Insert(hm, expr.identifier, XXH64(expr.identifier.data, expr.identifier.size, 0), expr.right.str);
 
         if (!_Xtal_INIParser_Consume(parser, Xtal_INIScanner_TokenType_EOL)) {
             _Xtal_INIParser_ErrorAtCurrent(parser, S8Lit("Expected end of line"));
@@ -40,7 +40,7 @@ internal void Xtal_INIAST_Section(Xtal_INIParser* parser) {
 // NOTE(geni): Apparently blank section names are supported by Clickteam Fusion?!?
 #if 0
             Xtal_MArenaTemp scratch = Xtal_GetScratch(NULL, 0);
-            _Xtal_INIParser_ErrorAt(parser, S8_PushF(scratch.arena, "Expected identifier, got %S instead", Xtal_INIScanner_TokenTypeName(_Xtal_INIParser_PeekPrevious(parser)->type)), start->line, start->col);
+            _Xtal_INIParser_ErrorAt(parser, S8_PushF(scratch.arena, "Expected identifier, got \"%S\" instead", Xtal_INIScanner_TokenTypeName(_Xtal_INIParser_PeekPrevious(parser)->type)), start->line, start->col);
             Xtal_MArenaTempEnd(scratch);
             return;
 #else

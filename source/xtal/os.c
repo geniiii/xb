@@ -7,7 +7,6 @@ internal inline Xtal_OSEvent Xtal_OSKeyPressEvent(Key key, KeyModifiers modifier
         .modifiers = modifiers,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSKeyReleaseEvent(Key key, KeyModifiers modifiers) {
     return (Xtal_OSEvent){
         .type      = Xtal_OSEventType_KeyRelease,
@@ -15,66 +14,56 @@ internal inline Xtal_OSEvent Xtal_OSKeyReleaseEvent(Key key, KeyModifiers modifi
         .modifiers = modifiers,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSMouseMoveEvent(ivec2s delta) {
     return (Xtal_OSEvent){
         .type  = Xtal_OSEventType_MouseMove,
         .delta = delta,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSMousePressEvent(MouseButton button) {
     return (Xtal_OSEvent){
         .type         = Xtal_OSEventType_MousePress,
         .mouse_button = button,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSMouseReleaseEvent(MouseButton mouse_button) {
     return (Xtal_OSEvent){
         .type         = Xtal_OSEventType_MouseRelease,
         .mouse_button = mouse_button,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSMouseLeaveEvent(void) {
     return (Xtal_OSEvent){
         .type = Xtal_OSEventType_MouseLeave,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSMouseScrollEvent(ivec2s delta) {
     return (Xtal_OSEvent){
         .type  = Xtal_OSEventType_MouseScroll,
         .delta = delta,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSFileDroppedEvent(String8 path) {
     return (Xtal_OSEvent){
         .type = Xtal_OSEventType_FileDropped,
         .path = path,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSWindowResizedEvent(void) {
     return (Xtal_OSEvent){
         .type = Xtal_OSEventType_WindowResized,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSWindowFocusLostEvent(void) {
     return (Xtal_OSEvent){
         .type = Xtal_OSEventType_WindowFocusLost,
     };
 }
-
 internal inline Xtal_OSEvent Xtal_OSWindowFocusGainedEvent(void) {
     return (Xtal_OSEvent){
         .type = Xtal_OSEventType_WindowFocusGained,
     };
 }
-
 internal inline void Xtal_OSPushEvent(Xtal_OSEvent event) {
     HardAssert(xtal_os != NULL);
     if (xtal_os->event_count < ArrayCount(xtal_os->events)) {

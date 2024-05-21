@@ -39,6 +39,7 @@ internal void TimerInit(Timer* timer) {
     HardAssert(timer->ticks_per_second > 0);
     if (!QueryPerformanceFrequency((LARGE_INTEGER*) &timer->counts_per_second)) {
         OutputErrorMessage("Timer Error", "QueryPerformanceFrequency failed!");
+        // NOTE(geni): This is fatal as game ticks won't be functional
         ExitProcess(1);
     }
 

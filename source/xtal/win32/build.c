@@ -68,6 +68,8 @@
 #include "language_layer.h"
 #include "math.c"
 #include "memory.h"
+#include "cstrings.h"
+#include "unicode.h"
 #include "string8.h"
 #include "string16.h"
 #include "util/pool.h"
@@ -81,7 +83,9 @@
 
 //~ xtal-win32 implementations
 
+#include "log.h"
 #include "log.c"
+
 #include "language_layer.c"
 #include "memory.c"
 #include "chars.c"

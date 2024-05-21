@@ -18,7 +18,11 @@ internal void HandleKeyPressMessage(WPARAM w_param, LPARAM l_param) {
     } else if (CharIsNumeric(vkey_code)) {
         key_input = Key_0 + (vkey_code - '0');
     } else if (vkey_code >= VK_F1 && vkey_code <= VK_F12) {
-        key_input = Key_F1 + vkey_code - VK_F1;
+        if (modifiers & KeyModifier_Alt && vkey_code == VK_F4) {
+            // global_os.quit = 1;
+        } else {
+            key_input = Key_F1 + vkey_code - VK_F1;
+        }
     } else {
         switch (vkey_code) {
             case VK_ESCAPE: {
@@ -105,6 +109,9 @@ internal void HandleKeyPressMessage(WPARAM w_param, LPARAM l_param) {
             case VK_OEM_6: {
                 key_input = Key_RightBracket;
             } break;
+
+            case VK_F4: {
+            }
         }
     }
 

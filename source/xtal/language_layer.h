@@ -23,6 +23,14 @@
 #define force_inline inline
 #endif
 
+#if defined(__clang__) || defined(__GNUC__)
+_Noreturn force_inline void unreachable(void) { __builtin_unreachable(); }
+#elif defined(_MSC_VER)
+_Noreturn force_inline void unreachable(void) { __assume(0); }
+#else  // ???
+inline void unreachable() {}
+#endif
+
 #if XTAL_BUILD_WIN32
 #pragma section(".roglob", read)
 #define read_only __declspec(allocate(".roglob"))

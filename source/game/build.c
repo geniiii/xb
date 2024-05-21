@@ -13,17 +13,31 @@
 //~ xtal headers
 
 #include "xtal/language_layer.h"
+#include "xtal/cstrings.h"
 #include "xtal/math.c"
 #include "xtal/memory.h"
 #include "xtal/string8.h"
 #include "xtal/string16.h"
+#include "xtal/log.h"
 #include "xtal/util/pool.h"
+#include "xtal/util/hashmap.h"
+#include "xtal/util/linked_list.c"
+#include "xtal/util/dynamic_array.h"
 #include "xtal/os.h"
 #include "xtal/opengl.h"
 #include "xtal/util/serialize.h"
+#include "xtal/string8list.h"
+#include "xtal/util/ini.h"
 
 #include "xtal/gfx/gl4/types.h"
 #include "xtal/gfx/gl4/texture.h"
+#include "xtal/unicode.h"
+#include "xtal/util/bmp.h"
+#include "xtal/util/rand.h"
+#include "xtal/gfx/gl4/shader.h"
+#include "xtal/gfx/gl4/vbo.h"
+#include "xtal/gfx/gl4/vao.h"
+#include "xtal/gfx/gl4/fbo.h"
 
 //~ stb_sprintf
 
@@ -75,7 +89,6 @@
 #include "xtal/chars.c"
 #include "xtal/cstrings.c"
 #include "xtal/unicode.c"
-#include "xtal/util/linked_list.c"
 #include "xtal/string8.c"
 #include "xtal/string8list.c"
 #include "xtal/os.c"

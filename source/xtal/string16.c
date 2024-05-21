@@ -1,13 +1,13 @@
 //~ String creation functions
 
-internal inline String16 S16_FromWString(u16* wstr) {
+internal String16 S16_FromWString(u16* wstr) {
     return (String16){
         .s    = wstr,
         .size = wcslen(wstr),
     };
 }
 
-internal inline String16 S16_Push(Xtal_MArena* arena, u64 size) {
+internal String16 S16_Push(Xtal_MArena* arena, u64 size) {
     String16 result = {
         .s    = Xtal_MArenaPushTypeN(arena, u16, size + 1),
         .size = size,
@@ -16,7 +16,7 @@ internal inline String16 S16_Push(Xtal_MArena* arena, u64 size) {
     return result;
 }
 
-internal inline String16 S16_PushCopy(Xtal_MArena* arena, String16 str) {
+internal String16 S16_PushCopy(Xtal_MArena* arena, String16 str) {
     String16 result = {
         .s    = Xtal_MArenaPushTypeN(arena, u16, str.size + 1),
         .size = str.size,
@@ -33,20 +33,18 @@ internal String16 S16_PushFromS8(Xtal_MArena* arena, String8 str) {
     u8* str_end = str.s;
 
     u64 needed_code_units = 0;
-    {
-        u8 size;
-        while (str_end != str.s + str.size) {
-            size = Xtal_Unicode_UTF8Size(*str_end);
-            if (size == 0) {
-                // TODO(geni): This won't handle non-UTF-8 correctly
-                LogWarning("Got unexpected continuation byte");
-                ++str_end;
-                continue;
-            }
-
-            needed_code_units += size <= 3 ? 1 : 2;
-            str_end += size;
+    u8  size;
+    while (str_end != str.s + str.size) {
+        size = Xtal_Unicode_UTF8Size(*str_end);
+        if (size == 0) {
+            // TODO(geni): This won't handle non-UTF-8 correctly
+            LogWarning("Got unexpected continuation byte");
+            ++str_end;
+            continue;
         }
+
+        needed_code_units += size <= 3 ? 1 : 2;
+        str_end += size;
     }
 
     result = (String16){
@@ -76,11 +74,9 @@ internal String16 S16_PushFV(Xtal_MArena* arena, const u16* fmt, va_list args) {
     va_copy(args2, args);
     u64      needed_bytes = _vsnwprintf(0, 0, fmt, args) + 1;
     String16 result;
-    {
-        result.s              = Xtal_MArenaPushTypeN(arena, u16, needed_bytes);
-        result.size           = _vsnwprintf(result.s, needed_bytes, fmt, args2);
-        result.s[result.size] = L'\0';
-    }
+    result.s              = Xtal_MArenaPushTypeN(arena, u16, needed_bytes);
+    result.size           = _vsnwprintf(result.s, needed_bytes, fmt, args2);
+    result.s[result.size] = L'\0';
     return result;
 }
 

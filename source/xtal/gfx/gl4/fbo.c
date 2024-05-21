@@ -1,7 +1,3 @@
-typedef struct XGL_FBO {
-    u32 handle;
-} XGL_FBO;
-
 internal XGL_FBO XGL_FBONew(void) {
     XGL_FBO fbo;
     glCreateFramebuffers(1, &fbo.handle);

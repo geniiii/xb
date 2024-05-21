@@ -1,9 +1,5 @@
 //~ String matching functions
 
-#define CalculateCStringLength(s)  ((u32) strlen(s))
-#define CalculateWCStringLength(s) ((u32) wcslen(s))
-
-// NOTE(geni): Returns 1 if both strings are NULL
 internal b32 CStringMatchCaseInsensitiveN(const char* a, const char* b, u64 n) {
     if (a && b) {
         for (u64 i = 0; i < n; ++i) {

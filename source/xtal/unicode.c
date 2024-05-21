@@ -1,10 +1,3 @@
-// TODO(geni): The size variable is not very well named, as it returns size in *code units*
-//             The struct's name is also probably not very good as it's not just a codepoint, a codepoint is a u32, perhaps calling it "DecodedCodepoint" is better?
-typedef struct {
-    u32 codepoint;
-    u8  size;
-} Xtal_Unicode_Codepoint;
-
 internal force_inline u8 Xtal_Unicode_UTF8Size(u8 c) {
     // clang-format off
     local_persist const u8 sizes[] = {
